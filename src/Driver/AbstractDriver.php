@@ -105,13 +105,21 @@ abstract class AbstractDriver implements DriverInterface
 
     public function getTempDir(): string
     {
-        $dir = ($this->config['temp_dir'] ?? null) ?: Helper::getTempDir() . DIRECTORY_SEPARATOR . 'base-excel';
+        $dir = ($this->config['temp_dir'] ?? null) ?: Helper::getTempDir() . DIRECTORY_SEPARATOR . $this->getTempDirSuffix();
         if (!is_dir($dir)) {
             if (!mkdir($dir, 0777, true)) {
                 throw new ExcelException('Failed to build temporary directory: ' . $dir);
             }
         }
         return $dir;
+    }
+
+    /**
+     * 临时目录子路径后缀，框架 Driver 可重写（如 laravel-excel、hyperf-excel）
+     */
+    protected function getTempDirSuffix(): string
+    {
+        return 'base-excel';
     }
 
     protected function exportDataCallback(

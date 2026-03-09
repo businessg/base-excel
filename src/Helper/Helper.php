@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Helper;
 
+use BusinessG\BaseExcel\Driver\AbstractDriverFactory;
 use Overtrue\Http\Client;
 use Ramsey\Uuid\Uuid;
 
@@ -56,6 +57,25 @@ class Helper
     }
 
     /**
+     * 导出文件流式下载的响应头，供框架 Driver 复用
+     *
+     * @param string $fileName 文件名
+     * @param string $filePath 文件路径（用于 Content-Length）
+     * @return array<string, string>
+     */
+    public static function getExportResponseHeaders(string $fileName, string $filePath): array
+    {
+        return [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment;filename="' . rawurlencode($fileName) . '"',
+            'Content-Length' => (string) filesize($filePath),
+            'Content-Transfer-Encoding' => 'binary',
+            'Cache-Control' => 'must-revalidate, max-age=0',
+            'Pragma' => 'public',
+        ];
+    }
+
+    /**
      * 清理临时目录中超过指定时间的文件
      *
      * @param string $directory 目录路径
@@ -90,5 +110,27 @@ class Helper
         }
 
         return $deletedFiles;
+    }
+
+    /**
+     * 从 DriverFactory 获取待清理的临时目录列表（去重）
+     *
+     * @return array<string> 目录路径列表
+     */
+    public static function getDirectoriesToClean(AbstractDriverFactory $driverFactory): array
+    {
+        $dirs = [];
+        foreach ($driverFactory->getDriverNames() as $key) {
+            try {
+                $driver = $driverFactory->get($key);
+                $dir = $driver->getTempDir();
+                if ($dir && is_dir($dir) && !in_array($dir, $dirs)) {
+                    $dirs[] = $dir;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+        return $dirs;
     }
 }

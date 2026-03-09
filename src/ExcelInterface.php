@@ -37,4 +37,9 @@ interface ExcelInterface
     public function getDriver(?string $driverName = null): DriverInterface;
 
     public function getConfig(): array;
+
+    /**
+     * 获取事件分发器，用于 Job 失败时派发 Error 事件
+     */
+    public function getEvent(): object;
 }

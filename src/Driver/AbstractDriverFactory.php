@@ -76,4 +76,12 @@ abstract class AbstractDriverFactory
     {
         return $this->configs[$name] ?? [];
     }
+
+    /**
+     * 获取所有已注册的 driver 名称
+     */
+    public function getDriverNames(): array
+    {
+        return array_keys($this->configs);
+    }
 }

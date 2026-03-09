@@ -32,12 +32,19 @@ abstract class AbstractExcelLogManager implements ExcelLogInterface
     abstract protected function resolveConfig(): array;
 
     /**
-     * 执行 upsert 操作，框架实现
-     *
-     * @param array $saveParam 要保存的数据
-     * @return int 影响行数
+     * 获取 Model 类名，由框架子类重写以提供默认值
      */
-    abstract protected function performUpsert(array $saveParam): int;
+    abstract protected function getDefaultModelClass(): string;
+
+    /**
+     * 执行 upsert 操作，Laravel/Hyperf Eloquent API 兼容
+     * 如果框架 ORM 不兼容，子类可重写此方法
+     */
+    protected function performUpsert(array $saveParam): int
+    {
+        $modelClass = $this->config['model'] ?? $this->getDefaultModelClass();
+        return $modelClass::query()->upsert([$saveParam], ['token']);
+    }
 
     public function saveLog(BaseConfig $config, array $saveParam = []): int
     {

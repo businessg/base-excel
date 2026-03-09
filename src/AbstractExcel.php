@@ -192,4 +192,9 @@ abstract class AbstractExcel implements ExcelInterface
     {
         return $this->config;
     }
+
+    public function getEvent(): object
+    {
+        return $this->event;
+    }
 }

@@ -102,22 +102,28 @@ class XlsWriterDriver extends AbstractDriver
         return $sheetData;
     }
 
-    /**
-     * 独立使用时仅支持 UPLOAD 类型；OUT 类型需由子类实现
-     */
     protected function exportOutPut(ExportConfig $config, string $filePath): mixed
     {
+        $path = $this->buildExportPath($config);
+
         switch ($config->outPutType) {
             case ExportConfig::OUT_PUT_TYPE_UPLOAD:
-                $path = $this->buildExportPath($config);
                 return $this->uploadToStorage($filePath, $path);
 
             case ExportConfig::OUT_PUT_TYPE_OUT:
-                throw new ExcelException('OUT_PUT_TYPE_OUT requires extension implementation');
+                return $this->exportOutPutStream($config, $filePath, $path);
 
             default:
                 throw new ExcelException('outPutType error');
         }
+    }
+
+    /**
+     * 实现流式下载输出，由框架子类重写
+     */
+    protected function exportOutPutStream(ExportConfig $config, string $filePath, string $path): mixed
+    {
+        throw new ExcelException('OUT_PUT_TYPE_OUT requires framework-specific implementation');
     }
 
     protected function exportSheet(Excel $excel, ExportSheet $sheet, ExportConfig $config, int $sheetIndex, string $filePath): void
