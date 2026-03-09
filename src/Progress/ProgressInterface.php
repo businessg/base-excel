@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BusinessG\BaseExcel\Progress;
 
 use BusinessG\BaseExcel\Data\BaseConfig;
+use BusinessG\BaseExcel\Data\BaseObject;
 
 interface ProgressInterface
 {
@@ -16,7 +17,7 @@ interface ProgressInterface
 
     public function setSheetProgress(BaseConfig $config, string $sheetName, ProgressData $progressData): ProgressData;
 
-    public function setProgress(BaseConfig $config, ProgressData $progressData): ProgressRecord;
+    public function setProgress(BaseConfig $config, ProgressData $progressData, ?BaseObject $data = null): ProgressRecord;
 
     public function pushMessage(string $token, string $message): void;
 
