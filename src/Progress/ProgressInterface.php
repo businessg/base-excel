@@ -22,4 +22,9 @@ interface ProgressInterface
     public function pushMessage(string $token, string $message): void;
 
     public function popMessage(string $token, int $num): array;
+
+    /**
+     * 调试用：读取消息（不消费），用于排查推送/获取问题
+     */
+    public function peekMessage(string $token, int $num): array;
 }

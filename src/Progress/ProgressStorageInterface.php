@@ -16,4 +16,10 @@ interface ProgressStorageInterface
     public function lpush(string $key, string $value, int $ttl): void;
 
     public function rpop(string $key): ?string;
+
+    /**
+     * 读取列表末尾 N 个元素（不删除），用于 peekMessage
+     * Redis: LRANGE key -$num -1
+     */
+    public function lrange(string $key, int $start, int $stop): array;
 }

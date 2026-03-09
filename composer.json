@@ -25,6 +25,7 @@
         "overtrue/http": "^1.2",
         "psr/container": "^1.0 || ^2.0",
         "psr/event-dispatcher": "^1.0",
+        "psr/log": "^1.0 || ^2.0 || ^3.0",
         "ramsey/uuid": "*",
         "symfony/console": "^6.0|^7.0"
     },

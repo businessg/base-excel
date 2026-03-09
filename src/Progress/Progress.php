@@ -139,6 +139,19 @@ class Progress implements ProgressInterface
         return $messages;
     }
 
+    public function peekMessage(string $token, int $num): array
+    {
+        $key = $this->getMessageKey($token);
+        $raw = $this->storage->lrange($key, -$num, -1);
+        $messages = [];
+        foreach ($raw as $message) {
+            if ($message !== '' && trim($message) !== '') {
+                $messages[] = $message;
+            }
+        }
+        return $messages;
+    }
+
     public function getConfig(): array
     {
         return $this->config;

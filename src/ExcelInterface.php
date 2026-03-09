@@ -21,6 +21,11 @@ interface ExcelInterface
 
     public function popMessage(string $token, int $num = 50): array;
 
+    /**
+     * 调试用：读取消息（不消费），用于排查推送/获取问题
+     */
+    public function peekMessage(string $token, int $num = 50): array;
+
     public function popMessageAndIsEnd(string $token, int $num = 50, bool &$isEnd = true): array;
 
     public function pushMessage(string $token, string $message): void;
