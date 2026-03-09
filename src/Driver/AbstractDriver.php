@@ -210,14 +210,14 @@ abstract class AbstractDriver implements DriverInterface
     }
 
     /**
-     * 导出文件输出 - 框架需实现此方法
+     * 导出文件输出 - 子类需实现此方法
      * UPLOAD: 返回存储路径字符串
-     * OUT: 返回框架的 Response 对象
+     * OUT: 返回 Response 对象
      */
     abstract protected function exportOutPut(ExportConfig $config, string $filePath): mixed;
 
     /**
-     * 上传文件到存储 - 供框架 exportOutPut 的 UPLOAD 分支复用
+     * 上传文件到存储 - 供 exportOutPut 的 UPLOAD 分支复用
      */
     protected function uploadToStorage(string $filePath, string $path): string
     {
