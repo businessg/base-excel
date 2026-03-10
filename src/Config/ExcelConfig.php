@@ -5,18 +5,27 @@ declare(strict_types=1);
 namespace BusinessG\BaseExcel\Config;
 
 /**
- * Typed configuration DTO that centralizes all defaults and provides
- * backward-compatible parsing from both old and new config formats.
+ * Excel 组件的顶层配置 DTO。
+ *
+ * 集中管理所有子模块配置，并兼容新旧两种配置格式。
+ * 通常通过 ExcelConfig::fromArray(config('excel', [])) 构建。
  */
 final class ExcelConfig
 {
     public function __construct(
+        /** 默认驱动名称，对应 drivers 数组中的 key，如 'xlswriter' */
         public readonly string $default = 'xlswriter',
+        /** 驱动列表，key 为驱动名，value 为驱动配置数组 */
         public readonly array $drivers = [],
+        /** 日志配置 */
         public readonly LoggingConfig $logging = new LoggingConfig(),
+        /** 异步队列配置 */
         public readonly QueueConfig $queue = new QueueConfig(),
+        /** 进度追踪配置 */
         public readonly ProgressConfig $progress = new ProgressConfig(),
+        /** 数据库日志配置 */
         public readonly DbLogConfig $dbLog = new DbLogConfig(),
+        /** 临时文件清理配置 */
         public readonly CleanupConfig $cleanup = new CleanupConfig(),
     ) {
     }
