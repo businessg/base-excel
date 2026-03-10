@@ -15,12 +15,12 @@ class Helper
         return Uuid::uuid4()->getHex()->toString();
     }
 
-    public static function downloadFile(string $remotePath, string $filePath): string|false
+    public static function downloadFile(string $remotePath, string $filePath, bool $verifySsl = true): string|false
     {
         $response = Client::create([
             'response_type' => 'raw',
         ])->request($remotePath, 'GET', [
-            'verify' => false,
+            'verify' => $verifySsl,
             'http_errors' => false,
         ]);
 

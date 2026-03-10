@@ -28,7 +28,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * 监听器抽象基类，提供事件列表和 process 分发逻辑
+ * 监听器抽象基类，提供事件列表和 process 分发逻辑。
+ * 所有事件方法提供空默认实现，子类只需 override 关心的事件。
  */
 abstract class AbstractBaseListener
 {
@@ -81,41 +82,41 @@ abstract class AbstractBaseListener
         $this->{$className}($event);
     }
 
-    abstract public function beforeExport(object $event): void;
+    public function beforeExport(BeforeExport $event): void {}
 
-    abstract public function beforeExportExcel(object $event): void;
+    public function beforeExportExcel(BeforeExportExcel $event): void {}
 
-    abstract public function beforeExportData(object $event): void;
+    public function beforeExportData(BeforeExportData $event): void {}
 
-    abstract public function beforeExportSheet(object $event): void;
+    public function beforeExportSheet(BeforeExportSheet $event): void {}
 
-    abstract public function beforeExportOutput(object $event): void;
+    public function beforeExportOutput(BeforeExportOutput $event): void {}
 
-    abstract public function afterExport(object $event): void;
+    public function afterExport(AfterExport $event): void {}
 
-    abstract public function afterExportData(object $event): void;
+    public function afterExportData(AfterExportData $event): void {}
 
-    abstract public function afterExportExcel(object $event): void;
+    public function afterExportExcel(AfterExportExcel $event): void {}
 
-    abstract public function afterExportSheet(object $event): void;
+    public function afterExportSheet(AfterExportSheet $event): void {}
 
-    abstract public function afterExportOutput(object $event): void;
+    public function afterExportOutput(AfterExportOutput $event): void {}
 
-    abstract public function beforeImport(object $event): void;
+    public function beforeImport(BeforeImport $event): void {}
 
-    abstract public function beforeImportExcel(object $event): void;
+    public function beforeImportExcel(BeforeImportExcel $event): void {}
 
-    abstract public function beforeImportData(object $event): void;
+    public function beforeImportData(BeforeImportData $event): void {}
 
-    abstract public function beforeImportSheet(object $event): void;
+    public function beforeImportSheet(BeforeImportSheet $event): void {}
 
-    abstract public function afterImport(object $event): void;
+    public function afterImport(AfterImport $event): void {}
 
-    abstract public function afterImportData(object $event): void;
+    public function afterImportData(AfterImportData $event): void {}
 
-    abstract public function afterImportExcel(object $event): void;
+    public function afterImportExcel(AfterImportExcel $event): void {}
 
-    abstract public function afterImportSheet(object $event): void;
+    public function afterImportSheet(AfterImportSheet $event): void {}
 
-    abstract public function error(object $event): void;
+    public function error(Error $event): void {}
 }

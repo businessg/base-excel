@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel;
 
+use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseConfig;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
@@ -29,6 +30,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 class AbstractExcel implements ExcelInterface
 {
     protected array $config;
+    protected ExcelConfig $excelConfig;
     protected EventDispatcherInterface $event;
 
     public function __construct(
@@ -38,6 +40,7 @@ class AbstractExcel implements ExcelInterface
         EventDispatcherInterface $event
     ) {
         $this->config = $configResolver->get('excel', []);
+        $this->excelConfig = ExcelConfig::fromArray($this->config);
         $this->event = $event;
     }
 
@@ -182,6 +185,11 @@ class AbstractExcel implements ExcelInterface
     public function getConfig(): array
     {
         return $this->config;
+    }
+
+    public function getExcelConfig(): ExcelConfig
+    {
+        return $this->excelConfig;
     }
 
     public function getEvent(): object

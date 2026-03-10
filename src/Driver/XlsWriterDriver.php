@@ -42,7 +42,7 @@ class XlsWriterDriver extends AbstractDriver
         ResponseFactoryInterface $responseFactory,
         DeferInterface $defer
     ) {
-        $disk = $config['filesystem']['storage'] ?? 'local';
+        $disk = $config['disk'] ?? $config['filesystem']['storage'] ?? 'local';
         $filesystem = $filesystemResolver->getFilesystem($disk);
         parent::__construct($container, $config, $name, $event, $filesystem);
         $this->responseFactory = $responseFactory;

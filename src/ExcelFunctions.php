@@ -58,46 +58,35 @@ class ExcelFunctions
 
     public static function export(ExportConfig $config): ExportData
     {
-        $container = self::getContainer();
-        if (!$container->has(ExcelInterface::class)) {
-            throw new RuntimeException('ExcelInterface is missing in container.');
-        }
-        return $container->get(ExcelInterface::class)->export($config);
+        return self::getExcel()->export($config);
     }
 
     public static function import(ImportConfig $config): ImportData
     {
-        $container = self::getContainer();
-        if (!$container->has(ExcelInterface::class)) {
-            throw new RuntimeException('ExcelInterface is missing in container.');
-        }
-        return $container->get(ExcelInterface::class)->import($config);
+        return self::getExcel()->import($config);
     }
 
     public static function progressPopMessage(string $token, int $num, bool &$isEnd): array
     {
-        $container = self::getContainer();
-        if (!$container->has(ExcelInterface::class)) {
-            throw new RuntimeException('ExcelInterface is missing in container.');
-        }
-        return $container->get(ExcelInterface::class)->popMessageAndIsEnd($token, $num, $isEnd);
+        return self::getExcel()->popMessageAndIsEnd($token, $num, $isEnd);
     }
 
     public static function progressPushMessage(string $token, string $message): void
     {
-        $container = self::getContainer();
-        if (!$container->has(ExcelInterface::class)) {
-            throw new RuntimeException('ExcelInterface is missing in container.');
-        }
-        $container->get(ExcelInterface::class)->pushMessage($token, $message);
+        self::getExcel()->pushMessage($token, $message);
     }
 
     public static function progress(string $token): ?ProgressRecord
+    {
+        return self::getExcel()->getProgressRecord($token);
+    }
+
+    private static function getExcel(): ExcelInterface
     {
         $container = self::getContainer();
         if (!$container->has(ExcelInterface::class)) {
             throw new RuntimeException('ExcelInterface is missing in container.');
         }
-        return $container->get(ExcelInterface::class)->getProgressRecord($token);
+        return $container->get(ExcelInterface::class);
     }
 }

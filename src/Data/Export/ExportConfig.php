@@ -31,8 +31,11 @@ class ExportConfig extends BaseConfig
     {
         return [
             'serviceName' => $this->getServiceName(),
+            'driverName' => $this->getDriverName(),
             'token' => $this->getToken(),
             'isAsync' => $this->getIsAsync(),
+            'isProgress' => $this->getIsProgress(),
+            'isDbLog' => $this->getIsDbLog(),
             'outPutType' => $this->getOutPutType(),
             'params' => $this->getParams(),
         ];

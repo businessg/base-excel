@@ -18,7 +18,6 @@ use BusinessG\BaseExcel\Event\AfterImportData;
 use BusinessG\BaseExcel\Event\BeforeExportData;
 use BusinessG\BaseExcel\Event\BeforeExportOutput;
 use BusinessG\BaseExcel\Event\BeforeImportData;
-use BusinessG\BaseExcel\Event\Error;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Helper\Helper;
 use BusinessG\BaseExcel\Strategy\Path\ExportPathStrategyInterface;
@@ -39,39 +38,23 @@ abstract class AbstractDriver implements DriverInterface
 
     public function export(ExportConfig $config): ExportData
     {
-        try {
-            $exportData = new ExportData(['token' => $config->getToken()]);
-            $filePath = $this->getTempFileName();
-            $path = $this->exportExcel($config, $filePath);
+        $exportData = new ExportData(['token' => $config->getToken()]);
+        $filePath = $this->getTempFileName();
+        $path = $this->exportExcel($config, $filePath);
 
-            $this->event->dispatch(new BeforeExportOutput($config, $this));
-            $exportData->response = $this->exportOutPut($config, $path);
-            $this->event->dispatch(new AfterExportOutput($config, $this, $exportData));
+        $this->event->dispatch(new BeforeExportOutput($config, $this));
+        $exportData->response = $this->exportOutPut($config, $path);
+        $this->event->dispatch(new AfterExportOutput($config, $this, $exportData));
 
-            return $exportData;
-        } catch (ExcelException $exception) {
-            $this->event->dispatch(new Error($config, $this, $exception));
-            throw $exception;
-        } catch (\Throwable $throwable) {
-            $this->event->dispatch(new Error($config, $this, $throwable));
-            throw $throwable;
-        }
+        return $exportData;
     }
 
     public function import(ImportConfig $config): ImportData
     {
-        try {
-            $importData = new ImportData(['token' => $config->getToken()]);
-            $config->setTempPath($this->fileToTemp($config->getPath()));
-            $importData->sheetData = $this->importExcel($config);
-            Helper::deleteFile($config->getTempPath());
-        } catch (ExcelException $exception) {
-            $this->event->dispatch(new Error($config, $this, $exception));
-            throw $exception;
-        } catch (\Throwable $throwable) {
-            $this->event->dispatch(new Error($config, $this, $throwable));
-            throw $throwable;
-        }
+        $importData = new ImportData(['token' => $config->getToken()]);
+        $config->setTempPath($this->fileToTemp($config->getPath()));
+        $importData->sheetData = $this->importExcel($config);
+        Helper::deleteFile($config->getTempPath());
         return $importData;
     }
 
@@ -211,8 +194,9 @@ abstract class AbstractDriver implements DriverInterface
     protected function buildExportPath(ExportConfig $config): string
     {
         $strategy = $this->container->get(ExportPathStrategyInterface::class);
+        $rootDir = $this->config['exportDir'] ?? $this->config['export']['rootDir'] ?? null;
         return implode(DIRECTORY_SEPARATOR, array_filter([
-            $this->config['export']['rootDir'] ?? null,
+            $rootDir,
             $strategy->getPath($config),
         ]));
     }

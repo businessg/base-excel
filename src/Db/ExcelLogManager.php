@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Db;
 
+use BusinessG\BaseExcel\Config\DbLogConfig;
+use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseConfig;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
@@ -17,20 +19,26 @@ class ExcelLogManager implements ExcelLogInterface
     public const TYPE_EXPORT = 'export';
     public const TYPE_IMPORT = 'import';
 
-    protected array $config;
+    protected DbLogConfig $dbLogConfig;
+    protected ?ExcelLogRepositoryInterface $repository;
 
     public function __construct(
         protected ContainerInterface $container,
         protected ProgressInterface $progress,
         ConfigResolverInterface $configResolver
     ) {
-        $this->config = $configResolver->get('excel.dbLog', [
-            'enable' => true,
-        ]);
+        $this->dbLogConfig = ExcelConfig::fromArray($configResolver->get('excel', []))->dbLog;
+        $this->repository = $container->has(ExcelLogRepositoryInterface::class)
+            ? $container->get(ExcelLogRepositoryInterface::class)
+            : null;
     }
 
     public function saveLog(BaseConfig $config, array $saveParam = []): int
     {
+        if (!$this->dbLogConfig->enabled) {
+            return 0;
+        }
+
         $token = $config->getToken();
         $type = $config instanceof ExportConfig ? static::TYPE_EXPORT : static::TYPE_IMPORT;
         $progressRecord = $this->getProgressByToken($token);
@@ -57,7 +65,11 @@ class ExcelLogManager implements ExcelLogInterface
 
     protected function performUpsert(array $saveParam): int
     {
-        $modelClass = $this->config['model'] ?? null;
+        if ($this->repository) {
+            return $this->repository->upsert($saveParam);
+        }
+
+        $modelClass = $this->dbLogConfig->model;
         if (!$modelClass) {
             return 0;
         }
@@ -71,6 +83,10 @@ class ExcelLogManager implements ExcelLogInterface
 
     public function getConfig(): array
     {
-        return $this->config;
+        return [
+            'enabled' => $this->dbLogConfig->enabled,
+            'enable' => $this->dbLogConfig->enabled,
+            'model' => $this->dbLogConfig->model,
+        ];
     }
 }

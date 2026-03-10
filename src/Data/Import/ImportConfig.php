@@ -46,9 +46,12 @@ class ImportConfig extends BaseConfig
     {
         return [
             'serviceName' => $this->getServiceName(),
-            'path' => $this->getPath(),
-            'isAsync' => $this->getIsAsync(),
+            'driverName' => $this->getDriverName(),
             'token' => $this->getToken(),
+            'isAsync' => $this->getIsAsync(),
+            'isProgress' => $this->getIsProgress(),
+            'isDbLog' => $this->getIsDbLog(),
+            'path' => $this->getPath(),
         ];
     }
 }

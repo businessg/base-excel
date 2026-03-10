@@ -13,9 +13,11 @@ use BusinessG\BaseExcel\Event\AfterImportData;
 use BusinessG\BaseExcel\Event\AfterImportSheet;
 use BusinessG\BaseExcel\Event\BeforeExport;
 use BusinessG\BaseExcel\Event\BeforeExportData;
+use BusinessG\BaseExcel\Event\BeforeExportExcel;
 use BusinessG\BaseExcel\Event\BeforeExportOutput;
 use BusinessG\BaseExcel\Event\BeforeExportSheet;
 use BusinessG\BaseExcel\Event\BeforeImport;
+use BusinessG\BaseExcel\Event\BeforeImportExcel;
 use BusinessG\BaseExcel\Event\BeforeImportSheet;
 use BusinessG\BaseExcel\Event\Error;
 use BusinessG\BaseExcel\Event\Event;
@@ -37,24 +39,24 @@ class ProgressListener extends AbstractBaseListener
     public function process(object $event): void
     {
         /** @var Event $event */
-        $enable = $this->progress->getConfig()['enable'] ?? true;
+        $enable = $this->progress->getConfig()['enable'] ?? $this->progress->getConfig()['enabled'] ?? true;
         if (!$enable || !$event->config->getIsProgress()) {
             return;
         }
         parent::process($event);
     }
 
-    public function beforeExport(object $event): void
+    public function beforeExport(BeforeExport $event): void
     {
         $this->progress->initRecord($event->config);
     }
 
-    public function beforeExportExcel(object $event): void
+    public function beforeExportExcel(BeforeExportExcel $event): void
     {
         $this->progress->getRecord($event->config);
     }
 
-    public function beforeExportData(object $event): void
+    public function beforeExportData(BeforeExportData $event): void
     {
         $this->progress->setSheetProgress($event->config, $event->exportCallbackParam->sheet->name, new ProgressData([
             'total' => $event->exportCallbackParam->totalCount,
@@ -62,21 +64,21 @@ class ProgressListener extends AbstractBaseListener
         ]));
     }
 
-    public function beforeExportSheet(object $event): void
+    public function beforeExportSheet(BeforeExportSheet $event): void
     {
         $this->progress->setSheetProgress($event->config, $event->sheet->name, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_PROCESS,
         ]));
     }
 
-    public function beforeExportOutput(object $event): void
+    public function beforeExportOutput(BeforeExportOutput $event): void
     {
         $this->progress->setProgress($event->config, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_OUTPUT,
         ]));
     }
 
-    public function afterExport(object $event): void
+    public function afterExport(AfterExport $event): void
     {
         $record = $this->progress->getRecord($event->config);
         $data = $event->data ?? $record->data;
@@ -85,7 +87,7 @@ class ProgressListener extends AbstractBaseListener
         ]), $data);
     }
 
-    public function afterExportData(object $event): void
+    public function afterExportData(AfterExportData $event): void
     {
         $success = count($event->data ?? []);
         $this->progress->setSheetProgress($event->config, $event->exportCallbackParam->sheet->name, new ProgressData([
@@ -95,18 +97,14 @@ class ProgressListener extends AbstractBaseListener
         ]));
     }
 
-    public function afterExportExcel(object $event): void
-    {
-    }
-
-    public function afterExportSheet(object $event): void
+    public function afterExportSheet(AfterExportSheet $event): void
     {
         $this->progress->setSheetProgress($event->config, $event->sheet->name, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_END,
         ]));
     }
 
-    public function afterExportOutput(object $event): void
+    public function afterExportOutput(AfterExportOutput $event): void
     {
         $record = $this->progress->getRecord($event->config);
         $data = $event->data ?? $record->data;
@@ -115,28 +113,24 @@ class ProgressListener extends AbstractBaseListener
         ]), $data);
     }
 
-    public function beforeImport(object $event): void
+    public function beforeImport(BeforeImport $event): void
     {
         $this->progress->initRecord($event->config);
     }
 
-    public function beforeImportExcel(object $event): void
+    public function beforeImportExcel(BeforeImportExcel $event): void
     {
         $this->progress->getRecord($event->config);
     }
 
-    public function beforeImportSheet(object $event): void
+    public function beforeImportSheet(BeforeImportSheet $event): void
     {
         $this->progress->setSheetProgress($event->config, $event->sheet->name, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_PROCESS,
         ]));
     }
 
-    public function beforeImportData(object $event): void
-    {
-    }
-
-    public function afterImport(object $event): void
+    public function afterImport(AfterImport $event): void
     {
         $record = $this->progress->getRecord($event->config);
         $data = $event->data ?? $record->data;
@@ -145,7 +139,7 @@ class ProgressListener extends AbstractBaseListener
         ]), $data);
     }
 
-    public function afterImportData(object $event): void
+    public function afterImportData(AfterImportData $event): void
     {
         $this->progress->setSheetProgress($event->config, $event->importCallbackParam->sheet->name, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_PROCESS,
@@ -158,11 +152,7 @@ class ProgressListener extends AbstractBaseListener
         }
     }
 
-    public function afterImportExcel(object $event): void
-    {
-    }
-
-    public function afterImportSheet(object $event): void
+    public function afterImportSheet(AfterImportSheet $event): void
     {
         $record = $this->progress->getRecord($event->config);
         $this->progress->setSheetProgress($event->config, $event->sheet->name, new ProgressData([
@@ -171,7 +161,7 @@ class ProgressListener extends AbstractBaseListener
         ]));
     }
 
-    public function error(object $event): void
+    public function error(Error $event): void
     {
         $this->progress->setProgress($event->config, new ProgressData([
             'status' => ProgressData::PROGRESS_STATUS_FAIL,

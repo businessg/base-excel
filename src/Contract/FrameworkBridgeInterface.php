@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Contract;
 
-use Psr\EventDispatcher\EventDispatcherInterface;
-
+/**
+ * Full-featured bridge aggregating all sub-bridge interfaces.
+ * Kept for backward compatibility -- framework adapters that implement this
+ * automatically satisfy CoreBridge, StorageBridge, HttpBridge, and InfrastructureBridge.
+ */
 interface FrameworkBridgeInterface extends
-    ConfigResolverInterface,
-    ObjectFactoryInterface,
-    RedisResolverInterface,
-    LoggerResolverInterface,
-    ResponseFactoryInterface,
-    FilesystemResolverInterface,
-    DeferInterface
+    CoreBridgeInterface,
+    StorageBridgeInterface,
+    HttpBridgeInterface,
+    InfrastructureBridgeInterface
 {
-    public function getEventDispatcher(): EventDispatcherInterface;
 }

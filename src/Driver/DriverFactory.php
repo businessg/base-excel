@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Driver;
 
+use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Contract\ObjectFactoryInterface;
 use BusinessG\BaseExcel\Exception\InvalidDriverException;
@@ -14,31 +15,14 @@ class DriverFactory
     /** @var DriverInterface[] */
     protected array $drivers = [];
 
-    protected array $configs = [];
+    protected ExcelConfig $excelConfig;
 
     public function __construct(
         protected ContainerInterface $container,
-        protected ConfigResolverInterface $configResolver,
+        ConfigResolverInterface $configResolver,
         protected ObjectFactoryInterface $objectFactory
     ) {
-        $options = $configResolver->get('excel.options');
-        $this->configs = $configResolver->get('excel.drivers', []);
-
-        foreach ($this->configs as $key => $item) {
-            $item = array_merge($options ?? [], $item);
-            $driverClass = $item['driver'];
-
-            if (!class_exists($driverClass)) {
-                throw new InvalidDriverException(sprintf('[Error] class %s is invalid.', $driverClass));
-            }
-
-            $driver = $objectFactory->make($driverClass, ['config' => $item, 'name' => $key]);
-            if (!$driver instanceof DriverInterface) {
-                throw new InvalidDriverException(sprintf('[Error] class %s is not instanceof %s.', $driverClass, DriverInterface::class));
-            }
-
-            $this->drivers[$key] = $driver;
-        }
+        $this->excelConfig = ExcelConfig::fromArray($configResolver->get('excel', []));
     }
 
     public function __get(string $name): DriverInterface
@@ -48,20 +32,40 @@ class DriverFactory
 
     public function get(string $name): DriverInterface
     {
-        $driver = $this->drivers[$name] ?? null;
-        if (!$driver instanceof DriverInterface) {
-            throw new InvalidDriverException(sprintf('[Error]  %s is a invalid driver.', $name));
+        if (!isset($this->drivers[$name])) {
+            $this->drivers[$name] = $this->createDriver($name);
         }
-        return $driver;
+        return $this->drivers[$name];
     }
 
     public function getConfig(string $name): array
     {
-        return $this->configs[$name] ?? [];
+        return $this->excelConfig->getDriverConfig($name);
     }
 
     public function getDriverNames(): array
     {
-        return array_keys($this->configs);
+        return array_keys($this->excelConfig->drivers);
+    }
+
+    protected function createDriver(string $name): DriverInterface
+    {
+        $item = $this->excelConfig->getDriverConfig($name);
+        if (empty($item)) {
+            throw new InvalidDriverException(sprintf('[Error] %s is a invalid driver.', $name));
+        }
+
+        $driverClass = $item['class'] ?? $item['driver'] ?? null;
+
+        if (!$driverClass || !class_exists($driverClass)) {
+            throw new InvalidDriverException(sprintf('[Error] class %s is invalid.', $driverClass ?? 'null'));
+        }
+
+        $driver = $this->objectFactory->make($driverClass, ['config' => $item, 'name' => $name]);
+        if (!$driver instanceof DriverInterface) {
+            throw new InvalidDriverException(sprintf('[Error] class %s is not instanceof %s.', $driverClass, DriverInterface::class));
+        }
+
+        return $driver;
     }
 }
