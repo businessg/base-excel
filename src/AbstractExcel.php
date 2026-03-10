@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel;
 
+use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseConfig;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\Data\Export\ExportData;
 use BusinessG\BaseExcel\Data\Import\ImportConfig;
 use BusinessG\BaseExcel\Data\Import\ImportData;
+use BusinessG\BaseExcel\Driver\DriverFactory;
 use BusinessG\BaseExcel\Driver\DriverInterface;
 use BusinessG\BaseExcel\Event\AfterExport;
 use BusinessG\BaseExcel\Event\AfterImport;
@@ -22,33 +24,22 @@ use BusinessG\BaseExcel\Progress\ProgressRecord;
 use BusinessG\BaseExcel\Queue\ExcelQueueInterface;
 use BusinessG\BaseExcel\Strategy\Token\TokenStrategyInterface;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
-/**
- * 框架无关的 Excel 抽象基类，Laravel/Hyperf 等框架只需实现 resolveConfig 和 resolveEventDispatcher
- */
-abstract class AbstractExcel implements ExcelInterface
+class AbstractExcel implements ExcelInterface
 {
     protected array $config;
+    protected EventDispatcherInterface $event;
 
-    /**
-     * @var object 事件分发器，支持 PSR-14 或 Laravel EventsDispatcher
-     */
-    protected object $event;
-
-    public function __construct(protected ContainerInterface $container, protected ProgressInterface $progress)
-    {
-        $this->config = $this->resolveConfig();
-        $this->event = $this->resolveEventDispatcher();
+    public function __construct(
+        protected ContainerInterface $container,
+        protected ProgressInterface $progress,
+        ConfigResolverInterface $configResolver,
+        EventDispatcherInterface $event
+    ) {
+        $this->config = $configResolver->get('excel', []);
+        $this->event = $event;
     }
-
-    abstract protected function resolveConfig(): array;
-
-    abstract protected function resolveEventDispatcher(): object;
-
-    /**
-     * 获取 DriverFactory 类名，用于 getDriverByName
-     */
-    abstract protected function getDriverFactoryClass(): string;
 
     public function export(ExportConfig $config): ExportData
     {
@@ -166,7 +157,7 @@ abstract class AbstractExcel implements ExcelInterface
 
     public function getDriverByName(string $driverName): DriverInterface
     {
-        return $this->container->get($this->getDriverFactoryClass())->get($driverName);
+        return $this->container->get(DriverFactory::class)->get($driverName);
     }
 
     public function getDriver(?string $driverName = null): DriverInterface

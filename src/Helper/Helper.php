@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Helper;
 
-use BusinessG\BaseExcel\Driver\AbstractDriverFactory;
+use BusinessG\BaseExcel\Driver\DriverFactory;
 use Overtrue\Http\Client;
 use Ramsey\Uuid\Uuid;
 
@@ -117,7 +117,7 @@ class Helper
      *
      * @return array<string> 目录路径列表
      */
-    public static function getDirectoriesToClean(AbstractDriverFactory $driverFactory): array
+    public static function getDirectoriesToClean(DriverFactory $driverFactory): array
     {
         $dirs = [];
         foreach ($driverFactory->getDriverNames() as $key) {

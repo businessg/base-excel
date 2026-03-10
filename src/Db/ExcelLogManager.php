@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Db;
 
+use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseConfig;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\Progress\ProgressData;
@@ -11,39 +12,21 @@ use BusinessG\BaseExcel\Progress\ProgressInterface;
 use BusinessG\BaseExcel\Progress\ProgressRecord;
 use Psr\Container\ContainerInterface;
 
-/**
- * Excel 日志管理器抽象基类，框架只需实现 resolveConfig 和 performUpsert
- */
-abstract class AbstractExcelLogManager implements ExcelLogInterface
+class ExcelLogManager implements ExcelLogInterface
 {
     public const TYPE_EXPORT = 'export';
     public const TYPE_IMPORT = 'import';
 
     protected array $config;
 
-    public function __construct(protected ContainerInterface $container, protected ProgressInterface $progress)
-    {
-        $this->config = $this->resolveConfig();
-    }
-
-    /**
-     * 解析配置，框架实现
-     */
-    abstract protected function resolveConfig(): array;
-
-    /**
-     * 获取 Model 类名，由框架子类重写以提供默认值
-     */
-    abstract protected function getDefaultModelClass(): string;
-
-    /**
-     * 执行 upsert 操作，Laravel/Hyperf Eloquent API 兼容
-     * 如果框架 ORM 不兼容，子类可重写此方法
-     */
-    protected function performUpsert(array $saveParam): int
-    {
-        $modelClass = $this->config['model'] ?? $this->getDefaultModelClass();
-        return $modelClass::query()->upsert([$saveParam], ['token']);
+    public function __construct(
+        protected ContainerInterface $container,
+        protected ProgressInterface $progress,
+        ConfigResolverInterface $configResolver
+    ) {
+        $this->config = $configResolver->get('excel.dbLog', [
+            'enable' => true,
+        ]);
     }
 
     public function saveLog(BaseConfig $config, array $saveParam = []): int
@@ -70,6 +53,15 @@ abstract class AbstractExcelLogManager implements ExcelLogInterface
         }
 
         return $this->performUpsert($saveParam);
+    }
+
+    protected function performUpsert(array $saveParam): int
+    {
+        $modelClass = $this->config['model'] ?? null;
+        if (!$modelClass) {
+            return 0;
+        }
+        return $modelClass::query()->upsert([$saveParam], ['token']);
     }
 
     public function getProgressByToken(string $token): ?ProgressRecord

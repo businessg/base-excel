@@ -6,13 +6,27 @@ namespace BusinessG\BaseExcel\Console;
 
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\ExcelInterface;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * 导出命令逻辑
- */
 class ExportCommandHandler
 {
+    public static function getCommandName(): string
+    {
+        return 'excel:export';
+    }
+
+    public static function configureTo(Command $command): void
+    {
+        $command->setDescription('Run export');
+        $command->addArgument('config', InputArgument::REQUIRED, 'The config of export.');
+        $command->addOption('progress', 'g', InputOption::VALUE_NEGATABLE, 'The progress of export.', true);
+        $command->addUsage('excel:export "App\\Excel\\DemoExportConfig"');
+        $command->addUsage('excel:export "App\\Excel\\DemoExportConfig" --no-progress');
+    }
+
     public function __construct(
         protected ExcelInterface $excel,
         protected ProgressDisplay $progressDisplay

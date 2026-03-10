@@ -6,13 +6,29 @@ namespace BusinessG\BaseExcel\Console;
 
 use BusinessG\BaseExcel\Data\Import\ImportConfig;
 use BusinessG\BaseExcel\ExcelInterface;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * 导入命令逻辑
- */
 class ImportCommandHandler
 {
+    public static function getCommandName(): string
+    {
+        return 'excel:import';
+    }
+
+    public static function configureTo(Command $command): void
+    {
+        $command->setDescription('Run import');
+        $command->addArgument('config', InputArgument::REQUIRED, 'The config of import.');
+        $command->addArgument('path', InputArgument::REQUIRED, 'The file path of import.');
+        $command->addOption('progress', 'g', InputOption::VALUE_NEGATABLE, 'The progress path of import.', true);
+        $command->addUsage('excel:import "App\\Excel\\DemoImportConfig" "https://xxx.com/demo.xlsx"');
+        $command->addUsage('excel:import "App\\Excel\\DemoImportConfig" "/excel/demo.xlsx"');
+        $command->addUsage('excel:import "App\\Excel\\DemoImportConfig" "/excel/demo.xlsx" --no-progress');
+    }
+
     public function __construct(
         protected ExcelInterface $excel,
         protected ProgressDisplay $progressDisplay

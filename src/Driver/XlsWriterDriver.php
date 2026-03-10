@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Driver;
 
+use BusinessG\BaseExcel\Contract\DeferInterface;
+use BusinessG\BaseExcel\Contract\FilesystemResolverInterface;
+use BusinessG\BaseExcel\Contract\ResponseFactoryInterface;
 use BusinessG\BaseExcel\Data\Export\Column;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\Data\Export\SheetStyle;
@@ -21,25 +24,29 @@ use BusinessG\BaseExcel\Event\BeforeImportExcel;
 use BusinessG\BaseExcel\Event\BeforeImportSheet;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Helper\Helper;
-use League\Flysystem\FilesystemOperator;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Vtiful\Kernel\Excel;
 
-/**
- * 基于 xlswriter 扩展的 Excel 驱动，可独立使用
- * 扩展此类需实现 exportOutPut 的 OUT 类型以支持流式下载
- */
 class XlsWriterDriver extends AbstractDriver
 {
+    protected ResponseFactoryInterface $responseFactory;
+    protected DeferInterface $defer;
+
     public function __construct(
         ContainerInterface $container,
         array $config,
         string $name,
         EventDispatcherInterface $event,
-        FilesystemOperator $filesystem
+        FilesystemResolverInterface $filesystemResolver,
+        ResponseFactoryInterface $responseFactory,
+        DeferInterface $defer
     ) {
+        $disk = $config['filesystem']['storage'] ?? 'local';
+        $filesystem = $filesystemResolver->getFilesystem($disk);
         parent::__construct($container, $config, $name, $event, $filesystem);
+        $this->responseFactory = $responseFactory;
+        $this->defer = $defer;
     }
 
     public function exportExcel(ExportConfig $config, string $filePath): string
@@ -118,12 +125,25 @@ class XlsWriterDriver extends AbstractDriver
         }
     }
 
-    /**
-     * 实现流式下载输出，由框架子类重写
-     */
     protected function exportOutPutStream(ExportConfig $config, string $filePath, string $path): mixed
     {
-        throw new ExcelException('OUT_PUT_TYPE_OUT requires framework-specific implementation');
+        $fileName = basename($path);
+        $headers = Helper::getExportResponseHeaders($fileName, $filePath);
+        return $this->responseFactory->createDownloadResponse($filePath, $fileName, $headers);
+    }
+
+    protected function deleteFile(string $filePath): void
+    {
+        $this->defer->defer(function () use ($filePath) {
+            if (file_exists($filePath)) {
+                Helper::deleteFile($filePath);
+            }
+        });
+    }
+
+    protected function getTempDirSuffix(): string
+    {
+        return $this->config['temp_dir_suffix'] ?? 'base-excel';
     }
 
     protected function exportSheet(Excel $excel, ExportSheet $sheet, ExportConfig $config, int $sheetIndex, string $filePath): void
@@ -170,9 +190,7 @@ class XlsWriterDriver extends AbstractDriver
         }
     }
 
-    /**
-     * @param Column[] $columns
-     */
+    /** @param Column[] $columns */
     protected function exportSheetHeader(Excel $excel, array $columns, int $maxDepth): void
     {
         foreach ($columns as $column) {

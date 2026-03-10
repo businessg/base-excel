@@ -4,28 +4,25 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Driver;
 
+use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
+use BusinessG\BaseExcel\Contract\ObjectFactoryInterface;
 use BusinessG\BaseExcel\Exception\InvalidDriverException;
 use Psr\Container\ContainerInterface;
 
-/**
- * 框架无关的 DriverFactory 抽象基类，框架只需实现 getConfigValue 和 makeDriver
- */
-abstract class AbstractDriverFactory
+class DriverFactory
 {
-    /**
-     * @var DriverInterface[]
-     */
+    /** @var DriverInterface[] */
     protected array $drivers = [];
 
     protected array $configs = [];
 
-    /**
-     * @throws InvalidDriverException when the driver class not exist or the class is not implemented DriverInterface
-     */
-    public function __construct(protected ContainerInterface $container)
-    {
-        $options = $this->getConfigValue('excel.options');
-        $this->configs = $this->getConfigValue('excel.drivers', []);
+    public function __construct(
+        protected ContainerInterface $container,
+        protected ConfigResolverInterface $configResolver,
+        protected ObjectFactoryInterface $objectFactory
+    ) {
+        $options = $configResolver->get('excel.options');
+        $this->configs = $configResolver->get('excel.drivers', []);
 
         foreach ($this->configs as $key => $item) {
             $item = array_merge($options ?? [], $item);
@@ -35,7 +32,7 @@ abstract class AbstractDriverFactory
                 throw new InvalidDriverException(sprintf('[Error] class %s is invalid.', $driverClass));
             }
 
-            $driver = $this->makeDriver($driverClass, ['config' => $item, 'name' => $key]);
+            $driver = $objectFactory->make($driverClass, ['config' => $item, 'name' => $key]);
             if (!$driver instanceof DriverInterface) {
                 throw new InvalidDriverException(sprintf('[Error] class %s is not instanceof %s.', $driverClass, DriverInterface::class));
             }
@@ -44,31 +41,17 @@ abstract class AbstractDriverFactory
         }
     }
 
-    /**
-     * 获取配置值
-     */
-    abstract protected function getConfigValue(string $key, mixed $default = null): mixed;
-
-    /**
-     * 通过容器创建 Driver 实例
-     */
-    abstract protected function makeDriver(string $class, array $params): DriverInterface;
-
     public function __get(string $name): DriverInterface
     {
         return $this->get($name);
     }
 
-    /**
-     * @throws InvalidDriverException when the driver invalid
-     */
     public function get(string $name): DriverInterface
     {
         $driver = $this->drivers[$name] ?? null;
         if (!$driver instanceof DriverInterface) {
             throw new InvalidDriverException(sprintf('[Error]  %s is a invalid driver.', $name));
         }
-
         return $driver;
     }
 
@@ -77,9 +60,6 @@ abstract class AbstractDriverFactory
         return $this->configs[$name] ?? [];
     }
 
-    /**
-     * 获取所有已注册的 driver 名称
-     */
     public function getDriverNames(): array
     {
         return array_keys($this->configs);
