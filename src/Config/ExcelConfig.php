@@ -27,6 +27,8 @@ final class ExcelConfig
         public readonly DbLogConfig $dbLog = new DbLogConfig(),
         /** 临时文件清理配置 */
         public readonly CleanupConfig $cleanup = new CleanupConfig(),
+        /** HTTP 配置（路由注册 + 响应格式 + 项目域名） */
+        public readonly HttpConfig $http = new HttpConfig(),
     ) {
     }
 
@@ -43,6 +45,7 @@ final class ExcelConfig
             progress: ProgressConfig::fromArray($raw['progress'] ?? []),
             dbLog: DbLogConfig::fromArray($raw['dbLog'] ?? []),
             cleanup: CleanupConfig::fromArray($raw['cleanup'] ?? $raw['cleanTempFile'] ?? []),
+            http: HttpConfig::fromArray($raw['http'] ?? $raw['routes'] ?? []),
         );
     }
 
