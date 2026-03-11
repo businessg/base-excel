@@ -53,9 +53,15 @@ abstract class AbstractDriver implements DriverInterface
     {
         $importData = new ImportData(['token' => $config->getToken()]);
         $config->setTempPath($this->fileToTemp($config->getPath()));
-        $importData->sheetData = $this->importExcel($config);
-        Helper::deleteFile($config->getTempPath());
-        return $importData;
+        try {
+            $importData->sheetData = $this->importExcel($config);
+            return $importData;
+        } finally {
+            $tempPath = $config->getTempPath();
+            if ($tempPath !== '' && file_exists($tempPath)) {
+                Helper::deleteFile($tempPath);
+            }
+        }
     }
 
     protected function fileToTemp(string $path): string
@@ -88,7 +94,8 @@ abstract class AbstractDriver implements DriverInterface
 
     public function getTempDir(): string
     {
-        $dir = ($this->config['temp_dir'] ?? null) ?: Helper::getTempDir() . DIRECTORY_SEPARATOR . $this->getTempDirSuffix();
+        $customDir = $this->config['temp_dir'] ?? $this->config['tempDir'] ?? null;
+        $dir = $customDir ?: Helper::getTempDir() . DIRECTORY_SEPARATOR . $this->getTempDirSuffix();
         if (!is_dir($dir)) {
             if (!mkdir($dir, 0777, true)) {
                 throw new ExcelException('Failed to build temporary directory: ' . $dir);

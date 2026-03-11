@@ -20,7 +20,7 @@ namespace BusinessG\BaseExcel\Config;
  *  - domain:        项目域名（含协议），用于 info 接口拼接 templateUrl 的完整地址
  *                   如 'https://example.com'，当 templateUrl 为相对路径时自动拼接
  *
- * 响应格式:
+ * 响应格式（response 下）:
  *  - codeField:     响应 JSON 中状态码字段名，默认 'code'
  *  - dataField:     响应 JSON 中数据字段名，默认 'data'
  *  - messageField:  响应 JSON 中消息字段名，默认 'message'
@@ -50,15 +50,16 @@ final class HttpConfig
 
     public static function fromArray(array $raw): self
     {
+        $response = $raw['response'] ?? [];
         return new self(
             enabled: $raw['enabled'] ?? false,
             prefix: $raw['prefix'] ?? '',
             middleware: $raw['middleware'] ?? [],
             domain: $raw['domain'] ?? '',
-            codeField: $raw['codeField'] ?? 'code',
-            dataField: $raw['dataField'] ?? 'data',
-            messageField: $raw['messageField'] ?? 'message',
-            successCode: $raw['successCode'] ?? 0,
+            codeField: $response['codeField'] ?? $raw['codeField'] ?? 'code',
+            dataField: $response['dataField'] ?? $raw['dataField'] ?? 'data',
+            messageField: $response['messageField'] ?? $raw['messageField'] ?? 'message',
+            successCode: $response['successCode'] ?? $raw['successCode'] ?? 0,
         );
     }
 }
