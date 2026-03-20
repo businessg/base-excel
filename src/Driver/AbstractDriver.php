@@ -220,7 +220,7 @@ abstract class AbstractDriver implements DriverInterface
      */
     protected function uploadToStorage(string $filePath, string $path): string
     {
-        $this->filesystem->writeStream($path, fopen($filePath, 'r+'));
+        $this->filesystem->writeStream($path, fopen($filePath, 'rb'));
         $this->deleteFile($filePath);
         if (!$this->filesystem->fileExists($path)) {
             throw new ExcelException('File upload failed');
