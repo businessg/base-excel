@@ -7,6 +7,7 @@ namespace BusinessG\BaseExcel;
 use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseConfig;
+use BusinessG\BaseExcel\Data\BaseObject;
 use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\Data\Export\ExportData;
 use BusinessG\BaseExcel\Data\Import\ImportConfig;
@@ -42,6 +43,7 @@ class AbstractExcel implements ExcelInterface
         $this->config = $configResolver->get('excel', []);
         $this->excelConfig = ExcelConfig::fromArray($this->config);
         $this->event = $event;
+        BaseObject::$fieldNaming = $this->excelConfig->http->fieldNaming;
     }
 
     public function export(ExportConfig $config): ExportData

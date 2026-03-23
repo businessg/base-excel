@@ -20,6 +20,9 @@ namespace BusinessG\BaseExcel\Config;
  *  - domain:        项目域名（含协议），用于 info 接口拼接 templateUrl 的完整地址
  *                   如 'https://example.com'，当 templateUrl 为相对路径时自动拼接
  *
+ * 接口字段命名风格:
+ *  - fieldNaming:   接口返回 JSON 的字段命名风格，'camel'（默认，驼峰）或 'snake'（下划线）
+ *
  * 响应格式（response 下）:
  *  - codeField:     响应 JSON 中状态码字段名，默认 'code'
  *  - dataField:     响应 JSON 中数据字段名，默认 'data'
@@ -45,6 +48,8 @@ final class HttpConfig
         public readonly string $messageField = 'message',
         /** 成功时状态码的值 */
         public readonly int|string $successCode = 0,
+        /** 接口返回字段命名风格：'camel'（驼峰）或 'snake'（下划线） */
+        public readonly string $fieldNaming = 'camel',
     ) {
     }
 
@@ -60,6 +65,7 @@ final class HttpConfig
             dataField: $response['dataField'] ?? $raw['dataField'] ?? 'data',
             messageField: $response['messageField'] ?? $raw['messageField'] ?? 'message',
             successCode: $response['successCode'] ?? $raw['successCode'] ?? 0,
+            fieldNaming: $raw['fieldNaming'] ?? 'camel',
         );
     }
 }

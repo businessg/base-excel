@@ -8,6 +8,7 @@ use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Config\HttpConfig;
 use BusinessG\BaseExcel\Contract\Arrayable;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
+use BusinessG\BaseExcel\Data\BaseObject;
 use BusinessG\BaseExcel\ExcelInterface;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Progress\ProgressData;
@@ -58,8 +59,9 @@ class ExcelBusinessService
             throw new ExcelException('对应记录不存在');
         }
 
+        $isEndKey = $this->getHttpConfig()->fieldNaming === 'snake' ? 'is_end' : 'isEnd';
         return [
-            'isEnd' => empty($message) && in_array($record->progress->status ?? 0, [
+            $isEndKey => empty($message) && in_array($record->progress->status ?? 0, [
                 ProgressData::PROGRESS_STATUS_COMPLETE,
                 ProgressData::PROGRESS_STATUS_FAIL,
                 ProgressData::PROGRESS_STATUS_END,
@@ -88,11 +90,18 @@ class ExcelBusinessService
         $config = $this->getImportConfig($businessId);
         $info = $config['info'] ?? [];
 
+        $urlKey = $this->getHttpConfig()->fieldNaming === 'snake' ? 'template_url' : 'templateUrl';
+
         if (!empty($info['templateBusinessId']) && empty($info['templateUrl'])) {
-            $info['templateUrl'] = $this->buildExportUrl($info['templateBusinessId']);
+            $info[$urlKey] = $this->buildExportUrl($info['templateBusinessId']);
+        } elseif (!empty($info['templateUrl'])) {
+            $info[$urlKey] = $info['templateUrl'];
         }
 
         unset($info['templateBusinessId']);
+        if ($urlKey !== 'templateUrl') {
+            unset($info['templateUrl']);
+        }
 
         return $info;
     }
@@ -156,6 +165,7 @@ class ExcelBusinessService
         if ($this->httpConfigCache === null) {
             $raw = $this->configResolver->get('excel') ?? [];
             $this->httpConfigCache = ExcelConfig::fromArray(is_array($raw) ? $raw : [])->http;
+            BaseObject::$fieldNaming = $this->httpConfigCache->fieldNaming;
         }
         return $this->httpConfigCache;
     }
