@@ -7,6 +7,7 @@ namespace BusinessG\BaseExcel\Driver;
 use BusinessG\BaseExcel\Config\ExcelConfig;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Contract\ObjectFactoryInterface;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\InvalidDriverException;
 use Psr\Container\ContainerInterface;
 
@@ -52,18 +53,18 @@ class DriverFactory
     {
         $item = $this->excelConfig->getDriverConfig($name);
         if (empty($item)) {
-            throw new InvalidDriverException(sprintf('[Error] %s is a invalid driver.', $name));
+            throw new InvalidDriverException(sprintf('[Error] %s is a invalid driver.', $name), ExcelErrorCode::DRIVER_INVALID_NAME);
         }
 
         $driverClass = $item['class'] ?? $item['driver'] ?? null;
 
         if (!$driverClass || !class_exists($driverClass)) {
-            throw new InvalidDriverException(sprintf('[Error] class %s is invalid.', $driverClass ?? 'null'));
+            throw new InvalidDriverException(sprintf('[Error] class %s is invalid.', $driverClass ?? 'null'), ExcelErrorCode::DRIVER_CLASS_INVALID);
         }
 
         $driver = $this->objectFactory->make($driverClass, ['config' => $item, 'name' => $name]);
         if (!$driver instanceof DriverInterface) {
-            throw new InvalidDriverException(sprintf('[Error] class %s is not instanceof %s.', $driverClass, DriverInterface::class));
+            throw new InvalidDriverException(sprintf('[Error] class %s is not instanceof %s.', $driverClass, DriverInterface::class), ExcelErrorCode::DRIVER_NOT_IMPLEMENTS);
         }
 
         return $driver;

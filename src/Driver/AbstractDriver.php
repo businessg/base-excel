@@ -18,6 +18,7 @@ use BusinessG\BaseExcel\Event\AfterImportData;
 use BusinessG\BaseExcel\Event\BeforeExportData;
 use BusinessG\BaseExcel\Event\BeforeExportOutput;
 use BusinessG\BaseExcel\Event\BeforeImportData;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Helper\Helper;
 use BusinessG\BaseExcel\Strategy\Path\ExportPathStrategyInterface;
@@ -70,14 +71,14 @@ abstract class AbstractDriver implements DriverInterface
 
         if (!Helper::isUrl($path)) {
             if (!is_file($path)) {
-                throw new ExcelException(sprintf('File not exists[%s]', $path));
+                throw new ExcelException(sprintf('File not exists[%s]', $path), ExcelErrorCode::FILE_PATH_NOT_EXISTS);
             }
             if (!copy($path, $filePath)) {
-                throw new ExcelException('File copy error');
+                throw new ExcelException('File copy error', ExcelErrorCode::FILE_COPY_FAILED);
             }
         } else {
             if (!Helper::downloadFile($path, $filePath)) {
-                throw new ExcelException('File download error');
+                throw new ExcelException('File download error', ExcelErrorCode::FILE_DOWNLOAD_FAILED);
             }
         }
         return $filePath;
@@ -87,7 +88,7 @@ abstract class AbstractDriver implements DriverInterface
     {
         $filePath = Helper::getTempFileName($this->getTempDir(), 'ex_');
         if (!$filePath) {
-            throw new ExcelException('Failed to build temporary file');
+            throw new ExcelException('Failed to build temporary file', ExcelErrorCode::TEMP_FILE_CREATE_FAILED);
         }
         return $filePath;
     }
@@ -98,7 +99,7 @@ abstract class AbstractDriver implements DriverInterface
         $dir = $customDir ?: Helper::getTempDir() . DIRECTORY_SEPARATOR . $this->getTempDirSuffix();
         if (!is_dir($dir)) {
             if (!mkdir($dir, 0777, true)) {
-                throw new ExcelException('Failed to build temporary directory: ' . $dir);
+                throw new ExcelException('Failed to build temporary directory: ' . $dir, ExcelErrorCode::TEMP_DIR_CREATE_FAILED);
             }
         }
         return $dir;
@@ -223,7 +224,7 @@ abstract class AbstractDriver implements DriverInterface
         $this->filesystem->writeStream($path, fopen($filePath, 'rb'));
         $this->deleteFile($filePath);
         if (!$this->filesystem->fileExists($path)) {
-            throw new ExcelException('File upload failed');
+            throw new ExcelException('File upload failed', ExcelErrorCode::FILE_UPLOAD_FAILED);
         }
         return $path;
     }

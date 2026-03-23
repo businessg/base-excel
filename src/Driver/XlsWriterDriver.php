@@ -22,6 +22,7 @@ use BusinessG\BaseExcel\Event\BeforeExportExcel;
 use BusinessG\BaseExcel\Event\BeforeExportSheet;
 use BusinessG\BaseExcel\Event\BeforeImportExcel;
 use BusinessG\BaseExcel\Event\BeforeImportSheet;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Helper\Helper;
 use Psr\Container\ContainerInterface;
@@ -92,7 +93,7 @@ class XlsWriterDriver extends AbstractDriver
                 $sheet->name = $sheetName;
             }
             if (!in_array($sheet->name, $sheetList)) {
-                throw new ExcelException("sheet {$sheet->name} not exist");
+                throw new ExcelException("sheet {$sheet->name} not exist", ExcelErrorCode::SHEET_NOT_EXISTS);
             }
             return $sheet;
         }, $sheets);
@@ -121,7 +122,7 @@ class XlsWriterDriver extends AbstractDriver
                 return $this->exportOutPutStream($config, $filePath, $path);
 
             default:
-                throw new ExcelException('outPutType error');
+                throw new ExcelException('outPutType error', ExcelErrorCode::OUTPUT_TYPE_ERROR);
         }
     }
 
@@ -265,7 +266,7 @@ class XlsWriterDriver extends AbstractDriver
     protected function checkFile(string $filePath): void
     {
         if (!file_exists($filePath)) {
-            throw new ExcelException('File does not exist');
+            throw new ExcelException('File does not exist', ExcelErrorCode::IMPORT_FILE_NOT_EXISTS);
         }
         $mimeType = Helper::getMimeType($filePath);
         if (!in_array($mimeType, [
@@ -273,7 +274,7 @@ class XlsWriterDriver extends AbstractDriver
             'application/vnd.ms-excel',
             'application/octet-stream',
         ])) {
-            throw new ExcelException('File mime type error');
+            throw new ExcelException('File mime type error', ExcelErrorCode::FILE_MIME_TYPE_ERROR);
         }
     }
 

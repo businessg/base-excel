@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BusinessG\BaseExcel\Data\Import;
 
 use BusinessG\BaseExcel\Data\BaseObject;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\ExcelException;
 
 class Sheet extends BaseObject
@@ -57,7 +58,7 @@ class Sheet extends BaseObject
             foreach ($this->columns as $k => $column) {
                 $key = $column->field ?: $column->title;
                 if ($header && !isset($header[$column->title])) {
-                    throw new ExcelException("The corresponding column header does not exist for [{$column->title}]");
+                    throw new ExcelException("The corresponding column header does not exist for [{$column->title}]", ExcelErrorCode::COLUMN_HEADER_NOT_EXISTS);
                 }
                 $headerKey = $column->title ? ($header[$column->title] ?? $k) : $k;
                 $value = $row[$headerKey] ?? null;
@@ -77,7 +78,7 @@ class Sheet extends BaseObject
     {
         foreach ($this->columns as $column) {
             if (!in_array($column->title, $header)) {
-                throw new ExcelException("The column header does not exist in [{$column->title}]");
+                throw new ExcelException("The column header does not exist in [{$column->title}]", ExcelErrorCode::COLUMN_HEADER_NOT_EXISTS);
             }
         }
     }

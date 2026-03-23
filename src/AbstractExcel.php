@@ -19,6 +19,7 @@ use BusinessG\BaseExcel\Event\AfterImport;
 use BusinessG\BaseExcel\Event\BeforeExport;
 use BusinessG\BaseExcel\Event\BeforeImport;
 use BusinessG\BaseExcel\Event\Error;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Progress\ProgressData;
 use BusinessG\BaseExcel\Progress\ProgressInterface;
@@ -59,7 +60,7 @@ class AbstractExcel implements ExcelInterface
 
             if ($config->getIsAsync()) {
                 if ($config->getOutPutType() == ExportConfig::OUT_PUT_TYPE_OUT) {
-                    throw new ExcelException('Async does not support output type ExportConfig::OUT_PUT_TYPE_OUT');
+                    throw new ExcelException('Async does not support output type ExportConfig::OUT_PUT_TYPE_OUT', ExcelErrorCode::ASYNC_OUT_NOT_SUPPORTED);
                 }
                 $this->pushQueue($config);
                 return $exportData;
@@ -95,7 +96,7 @@ class AbstractExcel implements ExcelInterface
             $this->event->dispatch(new BeforeImport($config, $driver));
             if ($config->getIsAsync()) {
                 if ($config->isReturnSheetData) {
-                    throw new ExcelException('Asynchronous does not support returning sheet data');
+                    throw new ExcelException('Asynchronous does not support returning sheet data', ExcelErrorCode::ASYNC_RETURN_SHEET_NOT_SUPPORTED);
                 }
                 $this->pushQueue($config);
                 return $importData;

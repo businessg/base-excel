@@ -9,7 +9,9 @@ use BusinessG\BaseExcel\Config\HttpConfig;
 use BusinessG\BaseExcel\Contract\Arrayable;
 use BusinessG\BaseExcel\Contract\ConfigResolverInterface;
 use BusinessG\BaseExcel\Data\BaseObject;
+use BusinessG\BaseExcel\Data\ResponseContext;
 use BusinessG\BaseExcel\ExcelInterface;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Exception\ExcelException;
 use BusinessG\BaseExcel\Progress\ProgressData;
 use BusinessG\BaseExcel\Progress\ProgressRecord;
@@ -41,7 +43,7 @@ class ExcelBusinessService
     {
         $record = $this->getProgressByToken($token)?->toArray();
         if (!$record) {
-            throw new ExcelException('对应记录不存在');
+            throw new ExcelException('对应记录不存在', ExcelErrorCode::PROGRESS_RECORD_NOT_FOUND);
         }
         return $this->sanitizeForJson($record);
     }
@@ -56,7 +58,7 @@ class ExcelBusinessService
         $message = $this->excel->popMessage($token, $num);
 
         if (!$record) {
-            throw new ExcelException('对应记录不存在');
+            throw new ExcelException('对应记录不存在', ExcelErrorCode::PROGRESS_RECORD_NOT_FOUND);
         }
 
         $isEndKey = $this->getHttpConfig()->fieldNaming === 'snake' ? 'is_end' : 'isEnd';
@@ -125,37 +127,23 @@ class ExcelBusinessService
     }
 
     /**
-     * 构建成功响应数组，字段名由 http 配置决定。
+     * 构建成功响应数组，通过 responseCallback 闭包构建。
      */
     public function successResponse(mixed $data = null, string $message = ''): array
     {
-        $hc = $this->getHttpConfig();
-        $resp = [
-            $hc->codeField => $hc->successCode,
-        ];
-        if ($data !== null) {
-            $resp[$hc->dataField] = $data;
-        }
-        if ($message !== '') {
-            $resp[$hc->messageField] = $message;
-        }
-        return $resp;
+        return ($this->getHttpConfig()->responseCallback)(
+            new ResponseContext(true, ExcelErrorCode::SUCCESS, $data, $message)
+        );
     }
 
     /**
-     * 构建错误响应数组，字段名由 http 配置决定。
+     * 构建错误响应数组，通过 responseCallback 闭包构建。
      */
     public function errorResponse(int|string $code, string $message = '', mixed $data = null): array
     {
-        $hc = $this->getHttpConfig();
-        $resp = [
-            $hc->codeField => $code,
-            $hc->messageField => $message,
-        ];
-        if ($data !== null) {
-            $resp[$hc->dataField] = $data;
-        }
-        return $resp;
+        return ($this->getHttpConfig()->responseCallback)(
+            new ResponseContext(false, $code, $data, $message)
+        );
     }
 
     protected ?HttpConfig $httpConfigCache = null;
@@ -183,7 +171,7 @@ class ExcelBusinessService
     {
         $config = $this->getExportConfig($businessId);
         if (!$config) {
-            throw new ExcelException('对应业务ID不存在: ' . $businessId);
+            throw new ExcelException('对应业务ID不存在: ' . $businessId, ExcelErrorCode::BUSINESS_ID_NOT_FOUND);
         }
 
         $configInstance = new $config['config']([
@@ -205,7 +193,7 @@ class ExcelBusinessService
     {
         $config = $this->getImportConfig($businessId);
         if (!$config) {
-            throw new ExcelException('对应业务ID不存在: ' . $businessId);
+            throw new ExcelException('对应业务ID不存在: ' . $businessId, ExcelErrorCode::BUSINESS_ID_NOT_FOUND);
         }
 
         $importConfig = new $config['config']([

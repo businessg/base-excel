@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Config;
 
+use BusinessG\BaseExcel\Data\ResponseContext;
+use Closure;
+
 /**
  * HTTP 配置（路由注册 + 响应格式 + 项目域名）。
  *
@@ -23,14 +26,14 @@ namespace BusinessG\BaseExcel\Config;
  * 接口字段命名风格:
  *  - fieldNaming:   接口返回 JSON 的字段命名风格，'camel'（默认，驼峰）或 'snake'（下划线）
  *
- * 响应格式（response 下）:
- *  - codeField:     响应 JSON 中状态码字段名，默认 'code'
- *  - dataField:     响应 JSON 中数据字段名，默认 'data'
- *  - messageField:  响应 JSON 中消息字段名，默认 'message'
- *  - successCode:   成功时状态码的值，默认 0
+ * 响应格式:
+ *  - responseCallback: 响应构建闭包，签名为 function(ResponseContext $context): array
+ *                      未配置时使用默认闭包，输出 {'code': $context->code, 'data': $context->data, 'message': $context->message}
  */
 final class HttpConfig
 {
+    public readonly Closure $responseCallback;
+
     public function __construct(
         /** 是否自动注册 Excel HTTP 路由 */
         public readonly bool $enabled = false,
@@ -40,32 +43,40 @@ final class HttpConfig
         public readonly array $middleware = [],
         /** 项目域名（含协议），如 'https://example.com'，为空则不拼接 */
         public readonly string $domain = '',
-        /** 响应 JSON 中状态码字段名 */
-        public readonly string $codeField = 'code',
-        /** 响应 JSON 中数据字段名 */
-        public readonly string $dataField = 'data',
-        /** 响应 JSON 中消息字段名 */
-        public readonly string $messageField = 'message',
-        /** 成功时状态码的值 */
-        public readonly int|string $successCode = 0,
         /** 接口返回字段命名风格：'camel'（驼峰）或 'snake'（下划线） */
         public readonly string $fieldNaming = 'camel',
+        /** 响应构建闭包，为 null 时使用默认闭包 */
+        ?Closure $responseCallback = null,
     ) {
+        $this->responseCallback = $responseCallback ?? self::getDefaultResponseCallback();
+    }
+
+    public static function getDefaultResponseCallback(): Closure
+    {
+        return static function (ResponseContext $context): array {
+            $resp = ['code' => $context->code];
+            if ($context->data !== null) {
+                $resp['data'] = $context->data;
+            }
+            if (!$context->isSuccess || $context->message !== '') {
+                $resp['message'] = $context->message;
+            }
+            return $resp;
+        };
     }
 
     public static function fromArray(array $raw): self
     {
         $response = $raw['response'] ?? [];
+        $callback = $response['responseCallback'] ?? null;
+
         return new self(
             enabled: $raw['enabled'] ?? false,
             prefix: $raw['prefix'] ?? '',
             middleware: $raw['middleware'] ?? [],
             domain: $raw['domain'] ?? '',
-            codeField: $response['codeField'] ?? $raw['codeField'] ?? 'code',
-            dataField: $response['dataField'] ?? $raw['dataField'] ?? 'data',
-            messageField: $response['messageField'] ?? $raw['messageField'] ?? 'message',
-            successCode: $response['successCode'] ?? $raw['successCode'] ?? 0,
             fieldNaming: $raw['fieldNaming'] ?? 'camel',
+            responseCallback: $callback instanceof Closure ? $callback : null,
         );
     }
 }

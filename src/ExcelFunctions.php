@@ -8,6 +8,7 @@ use BusinessG\BaseExcel\Data\Export\ExportConfig;
 use BusinessG\BaseExcel\Data\Export\ExportData;
 use BusinessG\BaseExcel\Data\Import\ImportConfig;
 use BusinessG\BaseExcel\Data\Import\ImportData;
+use BusinessG\BaseExcel\Exception\ExcelErrorCode;
 use BusinessG\BaseExcel\Progress\ProgressRecord;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -35,7 +36,7 @@ class ExcelFunctions
     protected static function getContainer(): ContainerInterface
     {
         if (self::$containerResolver === null) {
-            throw new RuntimeException('Excel container resolver is not set. Call ExcelFunctions::setContainerResolver() during bootstrap.');
+            throw new RuntimeException('Excel container resolver is not set. Call ExcelFunctions::setContainerResolver() during bootstrap.', ExcelErrorCode::CONTAINER_RESOLVER_NOT_SET);
         }
         return (self::$containerResolver)();
     }
@@ -85,7 +86,7 @@ class ExcelFunctions
     {
         $container = self::getContainer();
         if (!$container->has(ExcelInterface::class)) {
-            throw new RuntimeException('ExcelInterface is missing in container.');
+            throw new RuntimeException('ExcelInterface is missing in container.', ExcelErrorCode::EXCEL_INTERFACE_NOT_REGISTERED);
         }
         return $container->get(ExcelInterface::class);
     }
