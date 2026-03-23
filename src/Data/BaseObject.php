@@ -32,6 +32,9 @@ class BaseObject implements Arrayable
         $publicProperties = [];
         $useSnake = static::$fieldNaming === 'snake';
         foreach ($properties as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
             $value = $property->getValue($this);
             if ($value instanceof Arrayable) {
                 $value = $value->toArray();
