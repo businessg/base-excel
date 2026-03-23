@@ -10,6 +10,7 @@ class ImportConfig extends BaseConfig
 {
     public bool $isReturnSheetData = false;
     public string $path = '';
+    public array $params = [];
 
     /** @var Sheet[] */
     public array $sheets = [];
@@ -42,6 +43,11 @@ class ImportConfig extends BaseConfig
         return $this->tempPath;
     }
 
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
     public function __serialize(): array
     {
         return [
@@ -52,6 +58,7 @@ class ImportConfig extends BaseConfig
             'isProgress' => $this->getIsProgress(),
             'isDbLog' => $this->getIsDbLog(),
             'path' => $this->getPath(),
+            'params' => $this->getParams(),
         ];
     }
 }

@@ -201,14 +201,16 @@ class ExcelBusinessService
      * @return array{token: string}
      * @throws ExcelException
      */
-    public function importByBusinessId(string $businessId, string $path): array
+    public function importByBusinessId(string $businessId, string $path, array $param = []): array
     {
         $config = $this->getImportConfig($businessId);
         if (!$config) {
             throw new ExcelException('对应业务ID不存在: ' . $businessId);
         }
 
-        $importConfig = new $config['config']();
+        $importConfig = new $config['config']([
+            'params' => $param,
+        ]);
         $importConfig->setPath($path);
         $data = $this->excel->import($importConfig);
 
