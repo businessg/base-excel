@@ -4,44 +4,29 @@ declare(strict_types=1);
 
 namespace BusinessG\BaseExcel\Listener;
 
+use BusinessG\BaseExcel\Config\ListenersConfig;
+
 class ListenerRegistrar
 {
-    private const DEFAULT_CONFIG_PATH = __DIR__ . '/../../config/listeners.php';
-
     /**
-     * 从包内默认配置文件加载的 Listener 类列表。
+     * Base 侧默认监听器类名（与 {@see ListenersConfig} 默认值一致）。
      *
      * @return array<class-string<AbstractBaseListener>>
      */
     public static function getDefaultListeners(): array
     {
-        return self::loadDefaultListenersConfig();
+        return ListenersConfig::defaultBaseClassNames();
     }
 
     /**
-     * 从 excel 配置数组解析监听器类列表：`listeners` 非空则使用，否则回退到包内默认配置。
+     * 从 excel 配置数组解析监听器类名：`listeners` 非空则使用，否则使用 {@see ListenersConfig} 默认值。
+     *
+     * @param array<string, mixed> $excelConfig
      *
      * @return array<class-string<AbstractBaseListener>>
      */
     public static function resolveListeners(array $excelConfig): array
     {
-        $configured = $excelConfig['listeners'] ?? null;
-        if (is_array($configured) && $configured !== []) {
-            return array_values(array_filter(
-                $configured,
-                static fn (mixed $class): bool => is_string($class) && $class !== ''
-            ));
-        }
-
-        return self::getDefaultListeners();
-    }
-
-    /**
-     * @return array<class-string<AbstractBaseListener>>
-     */
-    private static function loadDefaultListenersConfig(): array
-    {
-        /** @var array<class-string<AbstractBaseListener>> */
-        return require self::DEFAULT_CONFIG_PATH;
+        return ListenersConfig::fromExcelArray($excelConfig)->classNames;
     }
 }

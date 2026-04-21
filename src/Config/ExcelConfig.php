@@ -9,6 +9,7 @@ namespace BusinessG\BaseExcel\Config;
  *
  * 集中管理所有子模块配置，并兼容新旧两种配置格式。
  * 通常通过 ExcelConfig::fromArray(config('excel', [])) 构建。
+ * 含 {@see ListenersConfig}（excel 中的 `listeners` 键）。
  */
 final class ExcelConfig
 {
@@ -29,6 +30,8 @@ final class ExcelConfig
         public readonly CleanupConfig $cleanup = new CleanupConfig(),
         /** HTTP 配置（路由注册 + 响应格式 + 项目域名） */
         public readonly HttpConfig $http = new HttpConfig(),
+        /** 事件监听器类名（Laravel 等为 Base 监听器；见 ListenersConfig） */
+        public readonly ListenersConfig $listeners = new ListenersConfig(),
     ) {
     }
 
@@ -46,6 +49,7 @@ final class ExcelConfig
             dbLog: DbLogConfig::fromArray($raw['dbLog'] ?? []),
             cleanup: CleanupConfig::fromArray($raw['cleanup'] ?? $raw['cleanTempFile'] ?? []),
             http: HttpConfig::fromArray($raw['http'] ?? $raw['routes'] ?? []),
+            listeners: ListenersConfig::fromExcelArray($raw),
         );
     }
 
