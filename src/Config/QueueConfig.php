@@ -16,6 +16,9 @@ namespace BusinessG\BaseExcel\Config;
  *    - Hyperf:  Hyperf AsyncQueue 暂不区分 channel，设为 'default' 即可
  *
  * 兼容旧配置键 'name'（已废弃，请使用 'connection'）。
+ *
+ * tries: 异步 Job 最多尝试次数（含首次执行）。可选；未在配置中指定（null）时不覆盖 Job，
+ * 由 Laravel（如 queue:work --tries）/ Hyperf AsyncQueue（Job 默认与 async_queue 驱动配置）处理。
  */
 final class QueueConfig
 {
@@ -24,6 +27,8 @@ final class QueueConfig
         public readonly string $connection = 'default',
         /** 队列通道名称 */
         public readonly string $channel = 'default',
+        /** 最多尝试次数；null 表示不覆盖，使用队列框架全局/默认行为 */
+        public readonly ?int $tries = null,
     ) {
     }
 
@@ -32,6 +37,7 @@ final class QueueConfig
         return new self(
             connection: $raw['connection'] ?? $raw['name'] ?? 'default',
             channel: $raw['channel'] ?? 'default',
+            tries: array_key_exists('tries', $raw) ? (int) $raw['tries'] : null,
         );
     }
 }
