@@ -28,14 +28,20 @@ Excel 同步/异步智能配置导入导出**基础组件**，可独立使用。
 
 ### 事件监听器
 
-组件内置若干领域事件（导入/导出生命周期等）。监听器类名列表由 **`BusinessG\BaseExcel\Config\ListenersConfig`** 表示，并作为 **`ExcelConfig::listeners`** 的一部分；从配置数组构建时使用 `ListenersConfig::fromExcelArray($excel)`（或由 `ExcelConfig::fromArray` 统一解析）。
+组件在启动时会合并"内置默认监听器"与应用配置中的 `listeners` 追加项后，交给集成层（Laravel/Hyperf 等）注册到各自事件分发器。
 
-- **未配置 `listeners`、或值为空数组**：使用 `ListenersConfig` 内置默认（一般为 `ProgressListener`、`ExcelLogDbListener`）。
-- **配置了非空 `listeners`**：使用配置中的类名（Laravel 等场景下应为 `AbstractBaseListener` 子类，且可被容器解析）。
+**内置默认监听器（见 `ListenersConfig::DEFAULT_CLASS_NAMES`）：**
 
-`ListenerRegistrar::resolveListeners()` 仍可作为便捷入口，内部等价于 `ListenersConfig::fromExcelArray(...)->classNames`。
+- `BusinessG\BaseExcel\Listener\ProgressListener`：进度追踪
+- `BusinessG\BaseExcel\Listener\ExcelLogDbListener`：数据库日志
 
-自定义监听器请继承 `AbstractBaseListener`，在 `listen()` 中返回要订阅的事件类名数组，并在 `process()` 中处理。
+**合并语义（`ListenerClassListMerge::merge()`）：**
+
+- 默认监听器顺序在前、配置追加的监听器在后
+- 同类名按首次出现位置保留、自动去重
+- 配置项为空数组或未配置时，仅使用默认监听器
+
+集成层统一通过 `ListenerRegistrar::resolveListeners($excelConfig)` 拿到最终 `class-string<AbstractBaseListener>[]`，保证 base 与各框架解析规则一致。
 
 ## 目录结构
 
@@ -51,8 +57,8 @@ src/
 ├── Progress/          # 进度接口与 DTO
 ├── Queue/             # 队列接口
 ├── Strategy/          # Token、Path 策略
-├── Config/            # ExcelConfig、ListenersConfig 等配置 DTO
-├── Listener/          # 领域事件监听器（ListenerRegistrar 委托 ListenersConfig）
+├── Config/            # ExcelConfig、ListenersConfig 等
+├── Listener/          # 领域事件监听器
 └── ExcelInterface.php
 ```
 

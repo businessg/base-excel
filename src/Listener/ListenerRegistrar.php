@@ -19,7 +19,10 @@ class ListenerRegistrar
     }
 
     /**
-     * 从 excel 配置数组解析监听器类名：`listeners` 非空则使用，否则使用 {@see ListenersConfig} 默认值。
+     * 从 excel 配置解析监听器类名。
+     * 语义保持为“默认监听器 + 配置追加监听器”，并在解析阶段完成去重。
+     *
+     * 合并规则同 {@see ListenersConfig::fromExcelArray}（内部 {@see \BusinessG\BaseExcel\Config\ListenerClassListMerge}）。
      *
      * @param array<string, mixed> $excelConfig
      *
