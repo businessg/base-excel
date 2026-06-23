@@ -149,7 +149,7 @@ class XlsWriterDriver extends AbstractDriver
 
     protected function exportSheet(Excel $excel, ExportSheet $sheet, ExportConfig $config, int $sheetIndex, string $filePath): void
     {
-        $sheetName = $sheet->getName();
+        $sheetName = (string) ($sheet->getName() ?? 'Sheet' . ($sheetIndex + 1));
         if ($sheetIndex > 0) {
             $excel->addSheet($sheetName);
         } else {
@@ -164,11 +164,20 @@ class XlsWriterDriver extends AbstractDriver
 
         [$columns, $headers, $maxDepth] = Column::processColumns($sheet->getColumns());
 
-        $this->exportSheetHeader($excel, $headers, $maxDepth);
+        $maxDepth = max(1, (int) $maxDepth);
+        $headers = is_array($headers) ? $headers : [];
 
-        $this->exportSheetData(function ($data) use ($excel) {
-            $excel->data($data);
-        }, $sheet, $config, $columns);
+        if (!empty($headers)) {
+            $this->exportSheetHeader($excel, $headers, $maxDepth);
+        }
+
+        if (!empty($columns)) {
+            $this->exportSheetData(function ($data) use ($excel) {
+                if (is_array($data) && !empty($data)) {
+                    $excel->data($data);
+                }
+            }, $sheet, $config, $columns);
+        }
 
         $this->event->dispatch(new AfterExportSheet($config, $this, $sheet));
     }
@@ -201,13 +210,25 @@ class XlsWriterDriver extends AbstractDriver
             $endRowIndex = $rowIndex + $column->rowSpan - 1;
             $range = "{$colStr}{$rowIndex}:{$endStr}{$endRowIndex}";
 
-            $excel->mergeCells($range, $column->title, !empty($column->headerStyle) ? $this->styleToResource($excel, $column->headerStyle) : null);
+            $title = (string) ($column->title ?? '');
+            $headerStyle = !empty($column->headerStyle) ? $this->styleToResource($excel, $column->headerStyle) : null;
+            if ($headerStyle !== null) {
+                $excel->mergeCells($range, $title, $headerStyle);
+            } else {
+                $excel->mergeCells($range, $title);
+            }
 
             if ($column->height > 0) {
                 $excel->setRow($range, $column->height);
             }
-            $defaultWidth = 5 * mb_strlen($column->title, 'utf-8');
-            $excel->setColumn($range, $column->width > 0 ? $column->width : $defaultWidth, !empty($column->style) ? $this->styleToResource($excel, $column->style) : null);
+            $defaultWidth = 5 * mb_strlen($title, 'utf-8');
+            $columnStyle = !empty($column->style) ? $this->styleToResource($excel, $column->style) : null;
+            $width = $column->width > 0 ? $column->width : $defaultWidth;
+            if ($columnStyle !== null) {
+                $excel->setColumn($range, $width, $columnStyle);
+            } else {
+                $excel->setColumn($range, $width);
+            }
         }
         $excel->setCurrentLine($maxDepth);
     }
